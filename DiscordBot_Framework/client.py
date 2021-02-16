@@ -34,11 +34,8 @@ class CustomClient(Client):
         if not self.started:
             self.FileManager.checkFiles()
             self.FileManager.loadFiles()
-            self.CommandHandler.checkCommandsNames()
-            self.CommandHandler.sortCommandsCategories()
             self.started = True
         self.Logger.info(f'The bot have logged in as {self.user}')
 
     async def on_error(self, event, *args, **kwargs):
-        self.Logger.error(f"{event.upper()}: {args}\n")
-        print_exc()
+        self.Logger.error("{}: {}, {}\n".format(event.upper(), args, kwargs)), print_exc()

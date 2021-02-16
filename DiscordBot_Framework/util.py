@@ -16,6 +16,6 @@ def initLogger(path):
 
 def isDiscordID(name):
     # Discord IDs are the same for servers, users, channels, ...
-    if len(name := str(name)) == 18 and name.isdigit():
+    if (len(name := str(name)) == 17 or 18) and name.isdigit():
         return True
     return False

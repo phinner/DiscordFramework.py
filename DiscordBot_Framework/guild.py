@@ -3,6 +3,7 @@ class GuildData(object):
         self.guild = guild
         self.prefix = prefix
         self.guild_permanent_link = None
+        self.roles = dict()
 
     def toDict(self):
         dictionary = self.__dict__.copy()
