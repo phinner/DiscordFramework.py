@@ -1,3 +1,4 @@
 *.log
 /Example/Token.txt
 /Example/Data/
+/.idea/
