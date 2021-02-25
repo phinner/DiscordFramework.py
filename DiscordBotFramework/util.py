@@ -1,8 +1,11 @@
+"""
+Old logger
+
 def initLogger(path):
     import logging
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
-    formatter = logging.Formatter("%(asctime)s[%(levelname)s]> %(message)s", datefmt="[%Y-%m-%d][%H:%M:%S]")
+    formatter = logging.Formatter("%(asctime)s[%(levelname)s]> %(msg)s", datefmt="[%Y-%m-%d][%H:%M:%S]")
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(formatter)
@@ -12,6 +15,7 @@ def initLogger(path):
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
     return logger
+"""
 
 
 def isDiscordID(name):

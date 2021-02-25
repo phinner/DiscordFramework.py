@@ -1,83 +1,71 @@
-from random import choice
 from inspect import stack
 
-from .util import isDiscordID
 
-
-class AutoReader(object):
-    def __init__(self, name, keywords=None, quotes=None, function=None):
+class Reader(object):
+    def __init__(self, name, keywords=None, quotes=None, function=None, detector=None):
+        """
+        :param name: String containing the name of the reader
+        :param keywords: List with the keywords to detect, can be None if you want to always trigger the reader
+        :param quotes: List with the quotes
+        :param function: Function, can be None. Can be used if you wanna reply with complex stuff
+        :param detector: Function that will be used to detect the keywords, make sure it accepts a message and keywords argument to be able to read the message content. The default function is a simple any.
+        """
         self.name = name
         self.quotes = quotes
         self.keywords = keywords
         self.function = function
-
-        if type(self.keywords) is None:
-            self.keywords = str()
-        if type(self.quotes) is None:
-            self.quotes = str()
-
-        if type(self.keywords) is str:
-            self.keywords = [self.keywords]
-        if type(self.quotes) is str:
-            self.quotes = [self.quotes]
-
         self.enabled = True
+        self.detector = detector
 
-    async def __call__(self, client, message):
-        if self.function is None:
-            await client.MessageHandler.sendMessage(message.channel, choice(self.quotes))
-        else: await self.function(client, message)
+        if detector is None:
+            self.detector = lambda msg, kwords: any(keyword in msg.content for keyword in kwords)
 
 
 class MessageHandler(object):
-    MessageReactions = dict()
+    MessageReaders = dict()
 
-    def __init__(self, client, error_message_timer=None):
+    def __init__(self, client):
         self.client = client
-        self.systemMessageTimer = error_message_timer
 
-    async def __call__(self, message):
-        # Respond to the user when the bot finds the corresponding keywords
-        for auto in self.MessageReactions.values():
-            print(auto, auto.name, auto.function)
-            if not auto.enabled:
-                continue
-            if auto.function is not None:
-                return await auto(self.client, message)
-            elif all(keyword in message.content for keyword in auto.keywords):
-                return await auto(self.client, message)
-
-    async def sendMessage(self, channel, msg, **kwargs):
-        if isDiscordID(channel):
-            channel = self.client.get_channel(int(channel))
-        await channel.send(content=msg, **kwargs)
-
-    async def sendErrMessage(self, channel, msg, **kwargs):
-        await self.sendMessage(channel, msg, delete_after=self.systemMessageTimer, **kwargs)
-
-    def havePrefix(self, msg):
-        return msg.content.startswith(self.client.GuildManager.guilds[str(msg.guild.id)].prefix)
+    def hasPrefix(self, msg):
+        """
+        This function looks for the prefix, at the beginning of the message
+        :return: Bool
+        """
+        return msg.content.startswith(self.client.GuildManager.guildIndex[str(msg.guild.id)].prefix)
 
     def getCommand(self, msg):
-        return msg.content[len(self.client.GuildManager.guilds[str(msg.guild.id)].prefix):].split(" ", 1)[0]
+        """
+        This function split the message and extracts the command which follow the prefix
+        :return: String
+        """
+        return msg.content[len(self.client.GuildManager.guildIndex[str(msg.guild.id)].prefix):].split(" ", 1)[0]
 
     def getArgs(self, msg):
-        data = msg.content[len(self.client.GuildManager.guilds[str(msg.guild.id)].prefix):].split(" ", 1)
-        if len(data) == 1: data.append(None)
+        """
+        This function returns the args after the command, returns None if there is no args
+        :return: String
+        """
+        data = msg.content[len(self.client.GuildManager.guildIndex[str(msg.guild.id)].prefix):].split(" ", 1)
+        if len(data) == 1:
+            data.append(None)
         return data[1]
 
     @classmethod
-    def registerAutoReader(cls, **kwargs):
+    def registerReader(cls, **kwargs):
+        """
+        This function registers a reader function, it can be used as a decorator or a regular function call.
+        If you don't register a reader but call the this function anyway, the function of the reader will be None.
+        """
         def wrapper(function):
-            print(kwargs, function)
-            react = AutoReader(**kwargs, function=function)
+            reader = Reader(**kwargs, function=function)
 
             # Makes sure there are no duplicates
-            if react.name in cls.MessageReactions:
-                raise IndexError(f"{react.name} already exists in the command index.")
+            if reader.name in cls.MessageReaders:
+                raise IndexError(f"{reader.name} already exists in the command index.")
 
             # Updates the reaction index
-            cls.MessageReactions.update({react.name: react})
+            cls.MessageReaders.update({reader.name: reader})
 
         # Checks if the function is called as a decorator
         if any(line.startswith('@') for line in stack(context=2)[1].code_context):
@@ -85,7 +73,7 @@ class MessageHandler(object):
         else: wrapper(None)
 
     @classmethod
-    def unregisterAutoReader(cls, name):
-        if name in cls.MessageReactions:
-            cls.MessageReactions.pop(name)
+    def unregisterReader(cls, name):
+        if name in cls.MessageReaders:
+            cls.MessageReaders.pop(name)
         else: raise IndexError(f"{name} not found.")

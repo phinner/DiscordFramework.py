@@ -2,8 +2,7 @@ import json
 from sys import path
 from random import choice, randint
 
-
-path.append('D:\\HDD_Coding\\Gitgud\\DiscordBot-Framework\\DiscordBot_Framework')
+path.append('D:\\HDD_Coding\\Gitgud\\DiscordBot-Framework')
 from DiscordBotFramework.command import CommandHandler
 from DiscordBotFramework.message import MessageHandler
 
@@ -33,7 +32,7 @@ async def count(client, msg, args):
 @CommandHandler.registerCommand(
     name="say", category="Fun",
     usage="say [msg]",
-    description="Dit un message à votre place, ptêt parce que vous êtes trop paresseux..."
+    description="Dit un msg à votre place, ptêt parce que vous êtes trop paresseux..."
 )
 async def say(client, msg, args):
     if args is None: txt = "Alors, tu n'as rien de bon à dire ?"
@@ -71,12 +70,14 @@ async def skill(client, msg, args):
     await msg.channel.send(txt)
 
 
-MessageHandler.registerAutoReader(
-    name="Honteux", keywords=["honteux", "pathétique"], quotes="C'EST HONTEUX!"
+MessageHandler.registerReader(
+    name="Honteux", keywords=["honteux", "pathétique"], quotes=["C'EST HONTEUX!"],
+    detector=lambda msg, kwords: any(kword.casefold() in msg.content.casefold() for kword in kwords)
+    # I changed the default lambda function to make the reader trigger even if the keywords are in capital letters
 )
 
 
-@MessageHandler.registerAutoReader(
+@MessageHandler.registerReader(
     name="idiot"
 )
 async def idiot(client, msg):

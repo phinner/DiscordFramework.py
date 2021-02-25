@@ -1,5 +1,6 @@
 from inspect import stack
 
+
 class Command(object):
     def __init__(self, name, function=None, alias=None, usage=None, category=None, description=None):
         self.name = name
@@ -8,14 +9,10 @@ class Command(object):
         self.category = category
         self.description = description
         self.function = function
+        self.enabled = True
 
         if self.function is None:
             self.function = lambda *x: None
-
-        self.enabled = True
-
-    async def __call__(self, *args):
-        await self.function(*args)
 
 
 class CommandHandler(object):
@@ -26,27 +23,23 @@ class CommandHandler(object):
     def __init__(self, client):
         self.client = client
 
-    async def __call__(self, command_name, client, message):
-        for index in [self.commandNames, self.commandAliases]:
-            if command_name in index:
-                if not index[command_name].enabled:
-                    return await self.client.MessageHandler.sendErrMessage(f"{command_name} is currently disabled.")
-                return await index[command_name](client, message, self.client.MessageHandler.getArgs(message))
-        message.channel.sendMessage(f"{command_name} is an invalid command.", )
-
     @classmethod
-    def registerCommand(cls, **kwargs):  # Use this as a decorator
+    def registerCommand(cls, **kwargs):
+        """
+        This function registers a command function, it can be used as a decorator or a regular function call.
+        If you don't register a command but call the this function anyway, the function of the command will be None.
+        """
         def wrapper(function):
             cmd = Command(function=function, **kwargs)
 
-            # Makes sure the command is callable
+            # Make sure the command is callable
             if not callable(cmd.function):
                 raise TypeError("The function is not callable.")
-            # Makes sure there are no duplicates
+            # Make sure there are no duplicates
             if (cmd.name or cmd.alias) in (cls.commandNames or cls.commandAliases):
                 raise IndexError(f"{cmd.name} or {cmd.alias} already exists in the command index.")
 
-            # Updates the commands indexes
+            # Update the commands indexes
             cls.commandNames.update({cmd.name: cmd})
             cls.commandAliases.update({cmd.alias: cmd})
 
@@ -55,13 +48,16 @@ class CommandHandler(object):
             else:
                 cls.commandCategories[cmd.category].append(cmd)
 
-        # Checks if the function is called as a decorator
+        # Check if the function is called as a decorator
         if any(line.startswith('@') for line in stack(context=2)[1].code_context):
             return wrapper
         else: wrapper(None)
 
     @classmethod
     def unregisterCommand(cls, name):
+        """
+        Unregister a command by it's name. It deletes it's alias.
+        """
         if name in cls.commandNames:
             # Deletes the aliases and the category first before
             if cls.commandNames[name].alias is not None:

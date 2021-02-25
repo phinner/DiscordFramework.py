@@ -1,3 +1,11 @@
+from shutil import rmtree
+from os import listdir
+from os.path import exists
+import json
+
+from .util import isDiscordID
+
+
 class GuildData(object):
     def __init__(self, guild, prefix):
         self.guild = guild
@@ -18,7 +26,7 @@ class GuildData(object):
                 raise AttributeError(f"{self.__name__} don't have the attribute {attribute}.")
             self.unsaved_attributes.remove(attribute)
 
-    def toDict(self):
+    def jsonify(self):
         dictionary = self.__dict__.copy()
         for attribute in self.unsaved_attributes:
             dictionary.pop(attribute)
@@ -26,23 +34,69 @@ class GuildData(object):
 
 
 class GuildManager(object):
-    def __init__(self, client, custom_guild_class=None):
+    def __init__(self, client):
         self.client = client
-        self.guilds = dict()
-        if custom_guild_class is None:
-            custom_guild_class = GuildData
-        self.GuildDataClass = custom_guild_class
-        self.template = self.GuildDataClass(None, self.client.DEFAULT_PREFIX)
+        self.guildIndex = dict()
+        self.template = self.client.GuildData(None, self.client.DEFAULT_PREFIX)
 
     def addGuildData(self, guild):
-        self.guilds.update({str(guild.id): self.GuildDataClass(guild, self.client.DEFAULT_PREFIX)})
-        self.client.FileManager.addGuildFile(f"{self.client.GUILD_PATH}\\{guild.id}.json")
+        self.guildIndex.update({str(guild.id): self.client.GuildData(guild, self.client.DEFAULT_PREFIX)})
+        self.client.FileManager.addGuildFile()
+        with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'w', encoding="utf-8") as file:
+            file.write(json.dumps(self.client.template.jsonify(), indent=2))
 
     def removeGuildData(self, guild):
-        self.guilds.pop(str(guild.id))
-        self.client.FileManager.deleteGuildFile(f"{self.client.GUILD_PATH}\\{guild.id}.json")
+        self.guildIndex.pop(str(guild.id))
+        self.client.FileManager.deleteGuildFile()
+        rmtree(f"{self.client.GUILD_PATH}\\{guild.id}.json")
 
     def loadGuildData(self, guild):
-        guild_path = f"{self.client.GUILD_PATH}\\{guild.id}.json"
-        self.guilds.update({str(guild.id): self.GuildDataClass(guild, self.client.DEFAULT_PREFIX)})
-        self.guilds[str(guild.id)].__dict__.update(self.client.FileManager.loadGuildFile(guild_path))
+        with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", "r", encoding="utf-8") as file:
+            guild_dictionary = json.load(file)
+        self.guildIndex.update({str(guild.id): self.client.GuildData(guild, self.client.DEFAULT_PREFIX)})
+        self.guildIndex[str(guild.id)].__dict__.update(guild_dictionary)
+
+    def saveGuildData(self, guild):
+        # Saves guildIndex data
+        with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'w', encoding="utf-8") as file:
+            file.write(json.dumps(guild.jsonify()))
+
+    def updateGuildData(self, guild):
+        with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'r+', encoding="utf-8") as file:
+            guild_dict = json.load(file)
+            for key in guild_dict.copy().keys():  # Deletes unused attributes
+                if key not in self.client.GuildManager.template.jsonify():
+                    guild_dict.pop(key)
+            for key, arg in self.client.GuildManager.template.jsonify().items():  # Adds new attributes
+                if key not in guild_dict:
+                    guild_dict.setdefault(key, arg)
+            file.truncate(0), file.seek(0), file.write(json.dumps(guild_dict, indent=2, ensure_ascii=True))
+
+    def checkGuildDirectory(self):
+        # Delete the data of the guilds where the bot is no longer present
+        guild_id_index = list(str(guild.id) for guild in self.client.guilds)
+        for file_name in listdir(self.client.GUILD_PATH):
+            file_path = f"{self.client.GUILD_PATH}\\{file_name}"
+            if file_name.endswith(".json") and isDiscordID(file_name[:-5]):
+                if file_name[:-5] not in guild_id_index:
+                    rmtree(file_path)
+            else:
+                self.client.Logger.WARNING(f"An unexpected file is present in the Guild directory: {file_path}")
+
+        # Checks the files of the guildIndex
+        for guild in self.client.guilds:
+            if not exists(f"{self.client.GUILD_PATH}\\{guild.id}.json"):
+                self.addGuildData(guild)
+            else:
+                self.updateGuildData(guild)
+        self.client.Logger.INFO("Files have been successfully checked.")
+
+    def loadGuildDirectory(self):
+        # Load guildIndex data
+        for guild in self.client.guilds:
+            self.loadGuildData(guild)
+        self.client.Logger.INFO("Files have been successfully loaded.")
+
+    def saveGuildDirectory(self):
+        for guild in self.guildIndex.values():
+            self.saveGuildData(guild)
