@@ -24,7 +24,7 @@ class ParkingBotClient(CustomClient):
         self.started = False
 
         # Pre-made kwarg for error messages
-        self.error_msg = {"delete_after": 5}
+        self.error_kwargs = {"delete_after": 5}
 
         # Atexit registers functions to be called when the program exits
         atexit.register(self.Logger.INFO, "The bot has exit.")
@@ -41,9 +41,9 @@ class ParkingBotClient(CustomClient):
         for index in [self.CommandHandler.commandNames, self.CommandHandler.commandAliases]:
             if command_name in index:
                 if not index[command_name].enabled:
-                    return await msg.channel.send(f"{command_name} is currently disabled.", **self.error_msg)
+                    return await msg.channel.send(f"{command_name} is currently disabled.", **self.error_kwargs)
                 return await index[command_name].function(self, msg, self.MessageHandler.getArgs(msg))
-        await msg.channel.sendMessage(f"{command_name} is an invalid command.", **self.error_msg)
+        await msg.channel.sendMessage(f"{command_name} is an invalid command.", **self.error_kwargs)
 
     async def handle_readers(self, msg):
         # Respond to the user when the bot finds the corresponding keywords
