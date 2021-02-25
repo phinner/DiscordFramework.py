@@ -1,4 +1,6 @@
 *.log
+/DiscordBotFramework/__pycache__/
+/.idea/
 /Example/Token.txt
 /Example/Data/
-/.idea/
+/Example/__pycache__/
