@@ -9,8 +9,7 @@ from DiscordBotFramework.message import MessageHandler
 
 
 @CommandHandler.registerCommand(
-    name="count", alias="c", category="Fun",
-    usage="count [number]",
+    name="count", alias="c", category="Fun", usage="count [number]",
     description="Compte le nombre de Tx, **number** est optionnel."
 )
 async def count(client, msg, args):
@@ -29,9 +28,8 @@ async def count(client, msg, args):
 
 
 @CommandHandler.registerCommand(
-    name="say", category="Fun",
-    usage="say [msg]",
-    description="Dit un msg à votre place, ptêt parce que vous êtes trop paresseux..."
+    name="say", category="Fun", usage="say [msg]",
+    description="Dit un message à ta place, ptêt parce que tu es trop paresseux..."
 )
 async def say(client, msg, args):
     if args is None:
@@ -41,8 +39,7 @@ async def say(client, msg, args):
 
 
 @CommandHandler.registerCommand(
-    name="skill", category="Fun",
-    usage="skill",
+    name="skill", category="Fun", usage="skill",
     description="Jauge votre niveau de skill, idéal pour départager les matchs serrés."
 )
 async def skill(client, msg, args):
@@ -106,12 +103,46 @@ async def help_cmd(client, msg, args):
                 title=f"{args.capitalize()}",
                 description=f"`{client.CommandHandler.commandNames[args].usage}` > {client.CommandHandler.commandNames[args].description}",
                 color=Colour.purple())
+
+            # This is for displaying the categories of my meme command
+            if args == "meme":
+                available_categories = str()
+                for category in client.meme_dict.keys():
+                    available_categories += f"`{category}`, "
+                available_categories = available_categories[:-2]
+                help_message.add_field(name="Catégories", value=available_categories)
         else:
             return await msg.channel.send(
                 f"`{args}` is invalid, check the command list or try the full name of the command.",
                 **client.error_kwargs)  # Remember the pre-made kwargs for error messages ?
 
     await msg.channel.send(content=None, embed=help_message)
+
+
+@CommandHandler.registerCommand(
+    name="meme", category="Fun", usage="meme [category]",
+    description="Affiche un meme aléatoire. Si `[category]` est ajouté, il affichera les memes de catégorie spécifiée."
+)
+async def parking_meme(client, msg, args):
+    # If args is None, it will return the every meme of the google drive folder,
+    #  else, it will look in the folder of the specified category
+    if args is None:
+        meme_list = client.DriveAPI.extractFiles(client.meme_dict["root"], "id, name, webContentLink, webViewLink, mimeType, description")
+    else:
+        if args.casefold() in client.meme_dict:
+            meme_list = client.DriveAPI.extractFiles(client.meme_dict[args], "id, name, webContentLink, webViewLink, mimeType, description")
+        else:
+            return await msg.channel.send(
+                f"The meme `{args}` category does not exist, check the available categories by doing `help meme`.", **client.error_kwargs
+            )
+
+    meme = choice(meme_list)
+    title = meme["description"] if "description" in meme else meme["name"]
+
+    meme_embed = Embed(title=title, url=meme["webViewLink"], colour=Colour.random())
+    meme_embed.set_image(url=meme["webContentLink"])
+    meme_embed.set_footer(text=f"Requested by: {msg.author.name}#{msg.author.discriminator}")
+    await msg.channel.send(content=None, embed=meme_embed)
 
 
 def better_detector(msg, kwords): return any(kword.casefold() in msg.content.casefold() for kword in kwords)

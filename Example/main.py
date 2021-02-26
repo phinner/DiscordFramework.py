@@ -9,6 +9,9 @@ from DiscordBotFramework.client import CustomClient
 # Don't forget to import the commands you created
 import tools
 
+# Let's have fun with the Google drive API
+from API.Google.drive import DriveAPI
+
 
 def get_token(file):
     with open(file, 'r') as f:
@@ -18,7 +21,7 @@ def get_token(file):
 class ParkingBotClient(CustomClient):
 
     def __init__(self, root_directory, handlers=None, storage=None, **options):
-        super().__init__(root_directory, handlers=None, storage=None, **options)
+        super().__init__(root_directory, handlers=handlers, storage=storage, **options)
 
         # I'll use this boolean to make sure the bot don't overwrites the data if he disconnects
         self.started = False
@@ -28,6 +31,22 @@ class ParkingBotClient(CustomClient):
 
         # Atexit registers functions to be called when the program exits
         atexit.register(self.Logger.INFO, "The bot has exit.")
+
+        # Let's add an API to handle some special commands
+        # If modifying these scopes, delete your previously saved credentials
+        # at ~/.credentials/drive-python-quickstart.json
+        SCOPES = 'https://www.googleapis.com/auth/drive'
+        CLIENT_SECRET_FILE = 'client_secret.json'
+        APPLICATION_NAME = 'Drive API Python Quickstart'
+        self.DriveAPI = DriveAPI(SCOPES, CLIENT_SECRET_FILE, APPLICATION_NAME)
+
+        # This dict is for the meme folders located in my google drive
+        self.meme_dict = {
+            "root": "178LIjcRlbHQQy4r4_SHU-qcepTWuZRgm",
+            "cursed": "1n0vNIdhaYKg_bGxjYnHq8WqIn6a6jwtc",
+            "random": "1ly2X4Poqcoofz6REuOfdGoD_vFFzciEi",
+            "parking": "1X8xy1mHf0s43vMvS4aQvAjB5e3qpgtBU"
+        }
 
     async def on_ready(self):
         if not self.started:
@@ -43,7 +62,7 @@ class ParkingBotClient(CustomClient):
                 if not index[command_name].enabled:
                     return await msg.channel.send(f"{command_name} is currently disabled.", **self.error_kwargs)
                 return await index[command_name].function(self, msg, self.MessageHandler.getArgs(msg))
-        await msg.channel.sendMessage(f"{command_name} is an invalid command.", **self.error_kwargs)
+        await msg.channel.send(f"{command_name} is an invalid command.", **self.error_kwargs)
 
     async def handle_readers(self, msg):
         # Respond to the user when the bot finds the corresponding keywords
