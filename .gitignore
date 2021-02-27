@@ -1,7 +1,9 @@
 *.log
+DiscordBotFramework/__pycache__
 .idea/
 Example/Token.txt
 Example/Data
+Example/__pycache__
 Example/.credentials
 Example/token.pickle
-*/__pycache__
+Example/API/Google/__pycache__

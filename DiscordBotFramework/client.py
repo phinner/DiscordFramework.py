@@ -9,7 +9,7 @@ from os.path import exists
 
 from .logger import CustomLogger
 from .message import MessageHandler
-from .command import CommandHandler, Command
+from .command import CommandManager, Command
 from .guild import GuildManager, GuildData
 
 
@@ -35,7 +35,7 @@ class CustomClient(Client):
         default_handlers = {
             "logger": CustomLogger,
             "msg": MessageHandler,
-            "command": CommandHandler,
+            "command": CommandManager,
             "guild": GuildManager
         }
 
@@ -51,10 +51,10 @@ class CustomClient(Client):
         self.Logger = default_handlers["logger"](self)
         self.GuildManager = default_handlers["guild"](self)
         self.MessageHandler = default_handlers["msg"](self)
-        self.CommandHandler = default_handlers["command"](self)
+        self.CommandManager = default_handlers["command"](self)
 
     async def on_error(self, event, *args, **kwargs):
-        self.Logger.ERROR("{}: {}, {}\n".format(event.upper(), args, kwargs))
+        self.Logger.ERROR("{}: {}, {}".format(event.upper(), args, kwargs))
         print_exc()
 
     def scheduledFunction(self, timer, start=None):

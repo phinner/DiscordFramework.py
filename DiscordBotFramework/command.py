@@ -15,7 +15,7 @@ class Command(object):
             self.function = lambda *x: None
 
 
-class CommandHandler(object):
+class CommandManager(object):
     commandNames = dict()
     commandAliases = dict()
     commandCategories = dict()
