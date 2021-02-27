@@ -61,7 +61,7 @@ class CustomClient(Client):
         """
         This function is for scheduling functions to start at a certain hour or date
         check https://docs.python.org/3/library/datetime.html to know how to format the inputted dictionary
-        :param timer: Dictionary containing the time between the function alls
+        :param timer: Dictionary containing the time between the function calls
         :param start: Dictionary containing the start date
         """
         def wrapper(func):
