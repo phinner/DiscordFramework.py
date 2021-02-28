@@ -1,6 +1,6 @@
-from shutil import rmtree
 from os import listdir
 from os.path import exists
+from shutil import rmtree
 import json
 
 from .util import isDiscordID
@@ -41,9 +41,8 @@ class GuildManager(object):
 
     def addGuildData(self, guild):
         self.guildIndex.update({str(guild.id): self.client.GuildData(guild, self.client.DEFAULT_PREFIX)})
-        self.client.FileManager.addGuildFile()
         with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'w', encoding="utf-8") as file:
-            file.write(json.dumps(self.client.template.jsonify(), indent=2))
+            file.write(json.dumps(self.template.jsonify(), indent=2))
 
     def removeGuildData(self, guild):
         self.guildIndex.pop(str(guild.id))
@@ -56,10 +55,10 @@ class GuildManager(object):
         self.guildIndex.update({str(guild.id): self.client.GuildData(guild, self.client.DEFAULT_PREFIX)})
         self.guildIndex[str(guild.id)].__dict__.update(guild_dictionary)
 
-    def saveGuildData(self, guild):
+    def saveGuildData(self, guild_data):
         # Saves guildIndex data
-        with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'w', encoding="utf-8") as file:
-            file.write(json.dumps(guild.jsonify()))
+        with open(f"{self.client.GUILD_PATH}\\{guild_data.guild.id}.json", 'w', encoding="utf-8") as file:
+            file.write(json.dumps(guild_data.jsonify()))
 
     def updateGuildData(self, guild):
         with open(f"{self.client.GUILD_PATH}\\{guild.id}.json", 'r+', encoding="utf-8") as file:

@@ -1,7 +1,5 @@
-from sys import path
 from auto_all import *
 
-path.append('D:\\HDD_Coding\\Gitgud\\DiscordBot-Framework')
 from DiscordBotFramework.message import MessageHandler
 
 

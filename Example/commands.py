@@ -1,10 +1,8 @@
-import json
-from sys import path
 from random import choice, randint
 from discord import Embed, Colour
 from auto_all import *
+import json
 
-path.append('D:\\HDD_Coding\\Gitgud\\DiscordBot-Framework')
 from DiscordBotFramework.command import CommandManager
 
 
@@ -133,13 +131,13 @@ async def parking_meme(client, msg, args):
     #  else, it will look in the folder of the specified category
     if args is None:
         meme_list = client.API["drive"].extractFiles(
-            client.meme_dict["all"], "id, name, webContentLink, webViewLink, mimeType, description"
+            client.meme_dict["all"], "name, webContentLink, webViewLink, mimeType"
         )
 
     else:
         if args.casefold() in client.meme_dict:
             meme_list = client.API["drive"].extractFiles(
-                client.meme_dict[args], "id, name, webContentLink, webViewLink, mimeType, description"
+                client.meme_dict[args], "name, webContentLink, webViewLink, mimeType"
             )
 
         else:
@@ -152,9 +150,8 @@ async def parking_meme(client, msg, args):
         return await msg.channel.send(f"The `{args}` category is currently empty.", **client.error_kwargs)
 
     meme = choice(meme_list)
-    title = meme["description"] if "description" in meme else meme["name"]
 
-    meme_embed = Embed(title=title, url=meme["webViewLink"], colour=Colour.random())
+    meme_embed = Embed(title=meme["name"].split(".")[0], url=meme["webViewLink"], colour=Colour.random())
     meme_embed.set_image(url=meme["webContentLink"])
     meme_embed.set_footer(text=f"Requested by: {msg.author.name}#{msg.author.discriminator}")
     await msg.channel.send(content=None, embed=meme_embed)

@@ -1,18 +1,16 @@
-from sys import path
 from os import getcwd
-from random import choice
-from asyncio import sleep
+from datetime import datetime
 import atexit
 
-path.append('D:\\HDD_Coding\\Gitgud\\DiscordBot-Framework')
 from DiscordBotFramework.client import CustomClient
+from DiscordBotFramework.util import scheduledFunction
 
 # Don't forget to import the commands and readers you created
 from .commands import *
 from .readers import *
 
 # Let's have fun with the Google drive API
-from API.Google.drive import DriveAPI
+from .API.google_drive import DriveAPI
 
 
 def get_token(file):
@@ -21,7 +19,6 @@ def get_token(file):
 
 
 class ParkingBotClient(CustomClient):
-
     def __init__(self, root_directory, handlers=None, storage=None, **options):
         super().__init__(root_directory, handlers=handlers, storage=storage, **options)
 
@@ -31,8 +28,7 @@ class ParkingBotClient(CustomClient):
         # Pre-made kwarg for error messages
         self.error_kwargs = {"delete_after": 5}
 
-        # Atexit registers functions to be called when the program exits
-        atexit.register(self.backup_data)
+        # atexit registers functions to be called when the program exits
         atexit.register(self.Logger.INFO, "The bot has exit.")
 
         # Let's add some APIs to make some special commands
@@ -46,14 +42,21 @@ class ParkingBotClient(CustomClient):
         self.API["drive"] = DriveAPI(SCOPES, CLIENT_SECRET_FILE, APPLICATION_NAME)
 
         # This dict is for the meme folders located in my google drive
+        self.meme_dict = dict()
+        self.update_meme_dict()
+
+    def update_meme_dict(self):
         self.meme_dict = self.API["drive"].searchFile(
             100, "'178LIjcRlbHQQy4r4_SHU-qcepTWuZRgm' in parents", "id, name, mimeType"
         )
 
         # The following code pack the folders name and id to make a dict {name: id}
         self.meme_dict = dict(
-            zip([file["name"].casefold() for file in self.meme_dict if file["mimeType"] == "application/vnd.google-apps.folder"],
-                [file["id"] for file in self.meme_dict if file["mimeType"] == "application/vnd.google-apps.folder"])
+            zip([file["name"].casefold() for file in self.meme_dict
+                if file["mimeType"] == "application/vnd.google-apps.folder"],
+
+                [file["id"] for file in self.meme_dict
+                if file["mimeType"] == "application/vnd.google-apps.folder"])
         )
 
         # Don't forget the root directory
@@ -65,13 +68,6 @@ class ParkingBotClient(CustomClient):
             self.GuildManager.loadGuildDirectory()
             self.started = True
         self.Logger.INFO(f'The bot have logged in as {self.user}')
-
-    async def backup_data(self):
-        await self.wait_until_ready()
-        while not self.is_closed():
-            self.GuildManager.saveGuildDirectory()
-            self.Logger.INFO("Data have been successfully saved.")
-            await sleep(1800)  # 30 minutes
 
     async def handle_commands(self, command_name, msg):
         # Handle the commands by iterating through the indexes, names and then aliases
@@ -107,7 +103,20 @@ class ParkingBotClient(CustomClient):
             else:
                 await self.handle_readers(msg)
 
+    @atexit.register
+    @scheduledFunction(timer={"minutes": 30}, start={"minute": datetime.now().minute + 11})
+    async def backup_data(self):
+        await self.wait_until_ready()
+        self.GuildManager.saveGuildDirectory()
+        self.Logger.INFO("Data have been successfully saved.")
+
+    @atexit.register
+    @scheduledFunction(timer={"minutes": 15}, start={"minute": datetime.now().minute + 10})
+    async def update_data(self):
+        await self.wait_until_ready()
+        self.update_meme_dict()
+        self.Logger.INFO("Data have been updated.")
+
 
 client = ParkingBotClient(getcwd())
-client.loop.create_task(client.backup_data())
-client.run(get_token("Token.txt"))
+client.run(get_token("Example\\discord_token.txt"))

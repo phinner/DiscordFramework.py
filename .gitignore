@@ -1,9 +1,11 @@
 *.log
+.idea
+.git
+.credentials
+Data
+
+Example/discord_token.txt
+
 DiscordBotFramework/__pycache__
-.idea/
-Example/Token.txt
-Example/Data
 Example/__pycache__
-Example/.credentials
-Example/token.pickle
-Example/API/Google/__pycache__
+Example/API/__pycache__
