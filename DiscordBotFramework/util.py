@@ -30,7 +30,7 @@ def isDiscordID(name):
     return False
 
 
-def scheduledFunction(timer, start=None):
+def ScheduledFunction(timer, start=None):
     """
     This function is for scheduling functions to start at a certain hour or date
     check https://docs.python.org/3/library/datetime.html to know how to format the inputted dictionary
@@ -49,9 +49,6 @@ def scheduledFunction(timer, start=None):
 
         default_kwargs.update(timer)
         func = tasks.Loop(func, **default_kwargs)
-
-        async def sub_wrapper(*func_args, **func_kwargs):
-            return func(*func_args, **func_kwargs)
 
         @func.before_loop
         async def before_func():
@@ -75,5 +72,5 @@ def scheduledFunction(timer, start=None):
             await sleep(sleep_time)
 
         func.start()
-        return sub_wrapper
+        return func
     return wrapper

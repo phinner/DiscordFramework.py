@@ -3,7 +3,7 @@ from datetime import datetime
 import atexit
 
 from DiscordBotFramework.client import CustomClient
-from DiscordBotFramework.util import scheduledFunction
+from DiscordBotFramework.util import ScheduledFunction
 
 # Don't forget to import the commands and readers you created
 from .commands import *
@@ -62,10 +62,27 @@ class ParkingBotClient(CustomClient):
         # Don't forget the root directory
         self.meme_dict.update({"all": "178LIjcRlbHQQy4r4_SHU-qcepTWuZRgm"})
 
+    def init_scheduledFunctions(self):
+        @atexit.register
+        @ScheduledFunction(timer={"minutes": 30}, start={"minute": datetime.now().minute + 11})
+        async def backup_data():
+            await self.wait_until_ready()
+            self.GuildManager.saveGuildDirectory()
+            self.Logger.INFO("Data have been successfully saved.")
+
+        @atexit.register
+        @ScheduledFunction(timer={"minutes": 15}, start={"minute": datetime.now().minute + 10})
+        async def update_data():
+            await self.wait_until_ready()
+            self.update_meme_dict()
+            self.Logger.INFO("Data have been updated.")
+        atexit.register(update_data)
+
     async def on_ready(self):
         if not self.started:
             self.GuildManager.checkGuildDirectory()
             self.GuildManager.loadGuildDirectory()
+            self.init_scheduledFunctions()
             self.started = True
         self.Logger.INFO(f'The bot have logged in as {self.user}')
 
@@ -102,20 +119,6 @@ class ParkingBotClient(CustomClient):
                 await msg.channel.send(f"Mon préfixe est `{self.GuildManager.guildIndex[str(msg.guild.id)].prefix}`")
             else:
                 await self.handle_readers(msg)
-
-    @atexit.register
-    @scheduledFunction(timer={"minutes": 30}, start={"minute": datetime.now().minute + 11})
-    async def backup_data(self):
-        await self.wait_until_ready()
-        self.GuildManager.saveGuildDirectory()
-        self.Logger.INFO("Data have been successfully saved.")
-
-    @atexit.register
-    @scheduledFunction(timer={"minutes": 15}, start={"minute": datetime.now().minute + 10})
-    async def update_data(self):
-        await self.wait_until_ready()
-        self.update_meme_dict()
-        self.Logger.INFO("Data have been updated.")
 
 
 client = ParkingBotClient(getcwd())
