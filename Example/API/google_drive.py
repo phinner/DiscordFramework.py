@@ -19,7 +19,7 @@ except ImportError:
 class DriveAPI(object):
 	def __init__(self, SCOPES, CLIENT_SECRET_FILE, APPLICATION_NAME):
 		"""
-		Most of the code come from https://github.com/samlopezf/google-drive-api-tutorial and the Google Drive API.
+		Most of the code come from https://github.com/samlopezf/google-drive-api-tutorial and the Google Drive API website.
 		I just turned it into a class and optimised it a little bit and added some handy functions.
 
 		Gets valid user credentials from storage.
