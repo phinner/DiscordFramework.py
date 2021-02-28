@@ -10,13 +10,13 @@ Don't mind to spam ping me on discord: **Phinner#0867**
 ### How to run the bot ?
 It's very simple, you just have to do 2 things
 - Step 1: open the cmd and set the current directory to **DiscordBot-Framework**
-```
+```cmd
 C:\Users\phinner>cd D:\HDD_Coding\Gitgud\DiscordBot-Framework
 ```
-Dont forget to change the drive by doing `C:\Users\phinner>D:`
+If your file is in another drive, don't forget to change it: `C:\Users\phinner>D:`
 
 - Step 2: once de directory is set, run the module by doing:
-```
+```cdm
 D:\HDD_Coding\Gitgud\DiscordBot-Framework>python -m Example.main
 ```
 
