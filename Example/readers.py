@@ -1,6 +1,6 @@
 from auto_all import *
 
-from DiscordBotFramework.message import MessageHandler
+from Framework.message import MessageHandler
 
 
 def _better_detector(msg, kwords):
@@ -14,7 +14,7 @@ start_all(globals())
 
 MessageHandler.registerReader(
     name="Honteux", keywords=["honteux", "pathétique"], quotes=["C'EST HONTEUX!"], detector=_better_detector
-)
+)()
 
 
 @MessageHandler.registerReader(

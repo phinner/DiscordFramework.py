@@ -1,11 +1,9 @@
 *.log
-.idea
-.git
-.credentials
-Data
+__pycache__
 
 Example/discord_token.txt
+Example/Data/API/dropbox_secret.json
+Example/Data/Client/discord_token.txt
 
-DiscordBotFramework/__pycache__
-Example/__pycache__
-Example/API/__pycache__
+Vault
+
